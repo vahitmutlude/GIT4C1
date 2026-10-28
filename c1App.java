@@ -2,7 +2,7 @@ import java.util.Scanner;
 
 /**
  * Course 1: Calculator CLI
- * Grundlagen der Informatik IV - Hochschule Düsseldorf
+ * Grundlagen der Informatik IV - Hochschule Düsseldorf 
  */
 public class App {
 
