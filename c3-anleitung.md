@@ -24,6 +24,20 @@ parking/
 
 **Reihenfolge:** zuerst die 2 Interfaces, dann die 2 alten Gates, dann die 4 neuen Klassen, zuletzt Lot.java. Danach **File → Save All**.
 
+## Überblick: Was haben wir insgesamt geändert?
+
+| Datei | Änderung |
+| --- | --- |
+| `Entrance.java` | Methode `processIncoming` bekommt 3 Parameter |
+| `Exit.java` | Methode `processOutgoing` bekommt 3 Parameter |
+| `EntranceGate.java` | nur die Signatur an das Interface angepasst, Verhalten gleich |
+| `ExitGate.java` | nur die Signatur an das Interface angepasst, Verhalten gleich |
+| `FullLotEntrance.java` | neu: Regel 1 |
+| `SemiLimitEntrance.java` | neu: Regel 2 |
+| `HourlyRateExit.java` | neu: Regel 3 |
+| `VehicleTypeExit.java` | neu: Regel 4 |
+| `Lot.java` | Aufrufe in `enter` und `exit` übergeben die neuen Argumente, neue Klassen in die Listen eingetragen |
+
 ## 1. `Entrance.java` (Ordner `iface`) – Interface Einfahrt
 
 ```java
@@ -38,6 +52,17 @@ public interface Entrance {
     public Ticket processIncoming(VehicleTypes type, double occupancy, LocalDateTime now);
 }
 ```
+
+**Was wurde geändert?**
+
+- **Vorher:** `public Ticket processIncoming();` – ohne Parameter. Die Einfahrt konnte nichts sehen und deshalb nichts entscheiden.
+- **Jetzt:** 3 Parameter:
+    - `VehicleTypes type` → Fahrzeugtyp, für Regel 2 (LKW ja oder nein)
+    - `double occupancy` → Auslastung von 0.0 bis 1.0, für Regel 1 (voll) und Regel 2 (ab 80 %)
+    - `LocalDateTime now` → aktuelle Sim-Uhrzeit, damit das Ticket die richtige Einfahrtszeit bekommt
+- **Imports:** `VehicleTypes` statt `Vehicle` importiert, weil ich nur den Typ übergebe, nicht das ganze Fahrzeug („so wenig wie möglich“).
+
+> 🇹🇷 Giriş görevlisine 3 bilgi veriyoruz: araç tipi, doluluk oranı, şu anki saat.
 
 ## 2. `Exit.java` (Ordner `iface`) – Interface Ausfahrt
 
@@ -54,7 +79,18 @@ public interface Exit {
 }
 ```
 
-## 3. `EntranceGate.java` (Ordner `impl`) – Standard-Einfahrt (nur Signatur geändert)
+**Was wurde geändert?**
+
+- **Vorher:** `public Receipt processOutgoing();` – ohne Parameter. Deshalb konnte die Ausfahrt nur einen festen Preis berechnen.
+- **Jetzt:** 3 Parameter:
+    - `VehicleTypes type` → für den Zuschlag in Regel 4 und für den Receipt
+    - `LocalDateTime entryTime` → Einfahrtszeit aus dem Ticket (`ticket.getTimeStamp()`)
+    - `LocalDateTime now` → aktuelle Sim-Uhrzeit, um die Parkdauer zu berechnen (Regel 3)
+- **Imports:** `VehicleTypes` hinzugefügt. `Ticket` und `Vehicle` werden nicht mehr gebraucht, weil ich nur die Einfahrtszeit und den Typ übergebe.
+
+> 🇹🇷 Çıkış görevlisine 3 bilgi veriyoruz: araç tipi, giriş saati, şu anki saat.
+
+## 3. `EntranceGate.java` (Ordner `impl`) – Standard-Einfahrt
 
 ```java
 package de.hsd.inflab.parkinggarage.parking.gate.impl;
@@ -75,7 +111,15 @@ public class EntranceGate implements Entrance {
 }
 ```
 
-## 4. `ExitGate.java` (Ordner `impl`) – Standard-Ausfahrt (nur Signatur geändert)
+**Was wurde geändert?**
+
+- **Nur die Signatur** von `processIncoming` an das neue Interface angepasst und `VehicleTypes` importiert.
+- **Das Verhalten ist unverändert** (jedes Fahrzeug bekommt ein Ticket). Das verlangt die Aufgabe: „Lassen Sie EntranceGate (mit Ausnahme der Signatur) unverändert!“
+- **Warum nötig?** EntranceGate implementiert das Interface Entrance. Wenn sich das Interface ändert, muss die Methode die gleiche Signatur haben, sonst gibt es einen Compilerfehler.
+
+> 🇹🇷 Sadece metodun başlığı değişti, içi aynı.
+
+## 4. `ExitGate.java` (Ordner `impl`) – Standard-Ausfahrt
 
 ```java
 package de.hsd.inflab.parkinggarage.parking.gate.impl;
@@ -94,7 +138,15 @@ public class ExitGate implements Exit {
 }
 ```
 
-## 5. `FullLotEntrance.java` (Ordner `impl`) – NEU – Regel 1: Parkhaus voll → abweisen
+**Was wurde geändert?**
+
+- **Nur die Signatur** von `processOutgoing` an das neue Interface angepasst und `LocalDateTime` importiert.
+- **Das Verhalten ist unverändert** (fester Betrag von 500, feste Dauer von 90 Minuten).
+- **Warum nötig?** Gleicher Grund wie bei EntranceGate: ExitGate implementiert das Interface Exit.
+
+> 🇹🇷 Sadece metodun başlığı değişti, içi aynı.
+
+## 5. `FullLotEntrance.java` (Ordner `impl`) – NEU, Regel 1
 
 ```java
 package de.hsd.inflab.parkinggarage.parking.gate.impl;
@@ -117,7 +169,15 @@ public class FullLotEntrance implements Entrance {
 }
 ```
 
-## 6. `SemiLimitEntrance.java` (Ordner `impl`) – NEU – Regel 2: ab 80 % keine LKW
+**Was wurde geändert?**
+
+- **Neue Klasse**, implementiert das Interface `Entrance`.
+- **Regel 1:** Ist das Parkhaus voll (Auslastung ≥ 1.0, also 100 %), wird das Fahrzeug mit `Ticket.denyEntry(...)` abgewiesen.
+- Sonst bekommt es mit `Ticket.issue(now)` ein gültiges Ticket mit der **aktuellen Sim-Uhrzeit**.
+
+> 🇹🇷 Otopark %100 doluysa geri çevir, değilse şu anki saatle bilet ver.
+
+## 6. `SemiLimitEntrance.java` (Ordner `impl`) – NEU, Regel 2
 
 ```java
 package de.hsd.inflab.parkinggarage.parking.gate.impl;
@@ -139,7 +199,15 @@ public class SemiLimitEntrance extends FullLotEntrance {
 }
 ```
 
-## 7. `HourlyRateExit.java` (Ordner `impl`) – NEU – Regel 3: 2 € je angefangene Stunde, ≤ 15 min gratis
+**Was wurde geändert?**
+
+- **Neue Klasse**, **erbt von `FullLotEntrance`** (Regel 2 = „wie 1, zusätzlich …“).
+- Ist das Fahrzeug ein LKW (`SEMI`) **und** die Auslastung ≥ 80 %, wird es abgewiesen.
+- Sonst wird mit `super.processIncoming(...)` **Regel 1 aus der Oberklasse** ausgeführt. So muss ich Regel 1 nicht noch einmal schreiben.
+
+> 🇹🇷 Kamyon ve %80+ doluysa geri çevir. Değilse Kural 1'e sor (super).
+
+## 7. `HourlyRateExit.java` (Ordner `impl`) – NEU, Regel 3
 
 ```java
 package de.hsd.inflab.parkinggarage.parking.gate.impl;
@@ -169,7 +237,17 @@ public class HourlyRateExit implements Exit {
 }
 ```
 
-## 8. `VehicleTypeExit.java` (Ordner `impl`) – NEU – Regel 4: LKW +5 €, Motorrad −1 €
+**Was wurde geändert?**
+
+- **Neue Klasse**, implementiert das Interface `Exit`.
+- `Duration.between(entryTime, now)` berechnet die **Parkdauer**, `toMinutes()` macht daraus Minuten.
+- Bis einschließlich **15 Minuten** kostet es **0 €** (Kulanz für Kurzparker).
+- Sonst: **angefangene Stunden** zählen. `(minutes + 59) / 60` rundet auf, z. B. 61 Minuten → 2 Stunden. Pro Stunde **2 €**.
+- Das Ergebnis wird als `new Receipt(betrag, parkdauer, typ)` zurückgegeben.
+
+> 🇹🇷 Kaç dakika kaldı? 15 veya altıysa 0 €. Yoksa başlanan her saat 2 €.
+
+## 8. `VehicleTypeExit.java` (Ordner `impl`) – NEU, Regel 4
 
 ```java
 package de.hsd.inflab.parkinggarage.parking.gate.impl;
@@ -204,7 +282,17 @@ public class VehicleTypeExit extends HourlyRateExit {
 }
 ```
 
-## 9. `Lot.java` (Ordner `parking`) – Lot – ganze Datei ersetzen
+**Was wurde geändert?**
+
+- **Neue Klasse**, **erbt von `HourlyRateExit`** (Regel 4 = „wie 3, zusätzlich …“).
+- `super.processOutgoing(...)` berechnet zuerst den Preis nach **Regel 3**.
+- War es kostenlos (0 €), **bleibt es kostenlos**: Der Zuschlag gilt nur für zahlungspflichtige Aufenthalte.
+- Sonst: **LKW +5 €**, **Motorrad −1 €**, PKW unverändert.
+- Der Preis wird **nie negativ** (mindestens 0 €).
+
+> 🇹🇷 Önce Kural 3 hesaplasın. Bedavaysa bedava kalsın. Kamyon +5 €, motosiklet −1 €, asla eksi olmasın.
+
+## 9. `Lot.java` (Ordner `parking`) – ganze Datei ersetzen
 
 ```java
 package de.hsd.inflab.parkinggarage.parking;
@@ -336,6 +424,19 @@ public class Lot {
     }
 }
 ```
+
+**Was wurde geändert?**
+
+Nur **4 Stellen** sind geändert, alles andere ist original:
+
+1. **Imports:** die 4 neuen Klassen importiert (`FullLotEntrance`, `SemiLimitEntrance`, `HourlyRateExit`, `VehicleTypeExit`).
+2. **`availableEntrances()` / `availableExits()`:** die neuen Klassen in die Listen eingetragen. Dadurch kann man sie in der GUI auswählen. Die erste Klasse bleibt der Standard.
+3. **`enter(...)`:** Vorher `entrance.processIncoming()`. Jetzt `entrance.processIncoming(vehicle.getVehicleType(), calculateOccupancy(), clock.now())`. Lot gibt der Einfahrt den **Fahrzeugtyp**, die **Auslastung** und die **aktuelle Uhrzeit**.
+4. **`exit(...)`:** Vorher `exit.processOutgoing()`. Jetzt `exit.processOutgoing(vehicle.getVehicleType(), ticket.getTimeStamp(), clock.now())`. Lot gibt der Ausfahrt den **Fahrzeugtyp**, die **Einfahrtszeit aus dem Ticket** und die **aktuelle Uhrzeit**.
+
+**Warum in Lot?** Die Aufgabe sagt: „Alle Aufrufe der Interface-Methoden liegen in der Klasse Lot.“ Lot kennt alle Informationen: das Fahrzeug, die Auslastung (eigene Methode) und die Uhr (eigenes Attribut `clock`).
+
+> 🇹🇷 Lot bilgileri topluyor ve görevlilere veriyor. Yeni sınıflar pencerede seçilebilsin diye listelere eklendi.
 
 ## Fertig?
 
