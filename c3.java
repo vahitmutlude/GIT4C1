@@ -83,6 +83,13 @@ return List.of(new ExitGate(), new HourlyRateExit(), new VehicleTypeExit());
 //NEUE JAVA DATEIEN:
 
 //FullLotEntrance.java
+package de.hsd.inflab.parkinggarage.parking.gate.impl;
+
+import de.hsd.inflab.parkinggarage.models.ticket.Ticket;
+import de.hsd.inflab.parkinggarage.models.vehicles.VehicleTypes;
+import de.hsd.inflab.parkinggarage.parking.gate.iface.Entrance;
+import java.time.LocalDateTime;
+
 public class FullLotEntrance implements Entrance {
 
     @Override
@@ -96,6 +103,13 @@ public class FullLotEntrance implements Entrance {
 
 
 //SemiLimitEntrance.java
+package de.hsd.inflab.parkinggarage.parking.gate.impl;
+
+import de.hsd.inflab.parkinggarage.models.ticket.Ticket;
+import de.hsd.inflab.parkinggarage.models.vehicles.VehicleTypes;
+import de.hsd.inflab.parkinggarage.parking.gate.iface.Entrance;
+import java.time.LocalDateTime;
+
 public class SemiLimitEntrance extends FullLotEntrance {
 
     @Override
@@ -109,6 +123,14 @@ public class SemiLimitEntrance extends FullLotEntrance {
 
 
 //HourlyRateExit.java
+package de.hsd.inflab.parkinggarage.parking.gate.impl;
+
+import de.hsd.inflab.parkinggarage.models.Receipt;
+import de.hsd.inflab.parkinggarage.models.vehicles.VehicleTypes;
+import de.hsd.inflab.parkinggarage.parking.gate.iface.Exit;
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 public class HourlyRateExit implements Exit {
 
     @Override
@@ -128,6 +150,14 @@ public class HourlyRateExit implements Exit {
 
 
 //VehicleTypeExit.java
+package de.hsd.inflab.parkinggarage.parking.gate.impl;
+
+import de.hsd.inflab.parkinggarage.models.Receipt;
+import de.hsd.inflab.parkinggarage.models.vehicles.VehicleTypes;
+import de.hsd.inflab.parkinggarage.parking.gate.iface.Exit;
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 public class VehicleTypeExit extends HourlyRateExit {
 
     @Override
